@@ -63,26 +63,31 @@ const Dashboard = () => {
     });
 
     const data = await response.json();
-    // Simulate agent activation
-    setAgents(
-    data.agents.map((a: any) => ({
-    name: a.agent_name.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
-    icon: Bot,
-    status: a.status === "completed" ? "done" : "running",
-    detail: a.status === "completed" ? "Complete" : "Running..."
-  }))
-);
+    const reply = data.error
+      ? String(data.error)
+      : typeof data.step_5 === "string"
+        ? data.step_5
+        : data.step_5
+          ? JSON.stringify(data.step_5)
+          : "No answer was returned.";
+    if (Array.isArray(data.agents)) {
+      setAgents(
+        data.agents.map((a: any) => ({
+          name: String(a.agent_name || "agent").replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
+          icon: Bot,
+          status: a.status === "completed" ? "done" : "running",
+          detail: a.status === "completed" ? "Complete" : "Running..."
+        }))
+      );
+    }
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMsg: Message = {
-        id: Date.now() + 1,
-        role: "ai",
-        text: data.step_5,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-    }, 2000);
+    const aiMsg: Message = {
+      id: Date.now() + 1,
+      role: "ai",
+      text: reply,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+    setMessages((prev) => [...prev, aiMsg]);
     } catch (error) {
 
     console.error("API ERROR:", error);

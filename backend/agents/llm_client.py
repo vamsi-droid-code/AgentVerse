@@ -30,5 +30,12 @@ def call_llm(system_prompt: str, user_input: str):
         timeout=120
     )
 
+    if response.status_code != 200:
+        detail = response.text[:240]
+        return (
+            "The model provider did not return an answer "
+            f"({response.status_code}). {detail}"
+        )
+
     data = response.json()
     return data["choices"][0]["message"]["content"]

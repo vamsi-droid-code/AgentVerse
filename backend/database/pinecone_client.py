@@ -13,29 +13,34 @@ index = pc.Index(
 )
 
 def store_embedding(request_id, query, answer):
+    try:
+        embedding = model.encode(query).tolist()
 
-    embedding = model.encode(query).tolist()
-
-    index.upsert([
-        (
-            request_id,
-            embedding,
-            {
-                "query": query,
-                "answer": answer
-            }
-        )
-    ])
+        index.upsert([
+            (
+                request_id,
+                embedding,
+                {
+                    "query": query,
+                    "answer": answer
+                }
+            )
+        ])
+    except Exception as e:
+        print("MEMORY STORE SKIPPED:", e)
 # SEARCH MEMORY
 def search_memory(query):
+    try:
+        embedding = model.encode(query).tolist()
 
-    embedding = model.encode(query).tolist()
-
-    results = index.query(
-        vector=embedding,
-        top_k=5,
-        include_metadata=True
-    )
+        results = index.query(
+            vector=embedding,
+            top_k=5,
+            include_metadata=True
+        )
+    except Exception as e:
+        print("MEMORY SEARCH SKIPPED:", e)
+        return []
 
     memories = []
 
