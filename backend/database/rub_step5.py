@@ -21,11 +21,17 @@ def run_step5(step3, agent_results, query):
         "output": final_output
     }
 
-    store_request(data)
+    try:
+        store_request(data)
+    except Exception as e:
+        print("REQUEST STORE SKIPPED:", e)
 
-    store_embedding(step3["request_id"], 
-                    query,
-                    final_output
-                    )
+    try:
+        store_embedding(step3["request_id"], 
+                        query,
+                        final_output
+                        )
+    except Exception as e:
+        print("EMBEDDING STORE SKIPPED:", e)
 
     return final_output
