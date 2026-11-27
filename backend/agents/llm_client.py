@@ -1,21 +1,14 @@
 import os
 import requests
-import json
 
-HF_API_KEY = os.getenv("HF_API_KEY")
-ROUTER_URL = "https://router.huggingface.co/v1/chat/completions"
-MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:0.5b")
 
 
 def call_llm(system_prompt: str, user_input: str):
 
-    headers = {
-        "Authorization": f"Bearer {HF_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
     payload = {
-        "model": MODEL_NAME,
+        "model": OLLAMA_MODEL,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_input}
@@ -24,8 +17,7 @@ def call_llm(system_prompt: str, user_input: str):
     }
 
     response = requests.post(
-        ROUTER_URL,
-        headers=headers,
+        f"{OLLAMA_BASE_URL}/v1/chat/completions",
         json=payload,
         timeout=120
     )
@@ -33,7 +25,7 @@ def call_llm(system_prompt: str, user_input: str):
     if response.status_code != 200:
         detail = response.text[:240]
         return (
-            "The model provider did not return an answer "
+            "The local model did not return an answer "
             f"({response.status_code}). {detail}"
         )
 

@@ -2,10 +2,8 @@ import os
 import requests
 import json
 
-HF_API_KEY = os.getenv("HF_API_KEY")
-
-ROUTER_URL = "https://router.huggingface.co/v1/chat/completions"
-MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:0.5b")
 
 
 SYSTEM_PROMPT = """
@@ -22,16 +20,8 @@ Example:
 """
 
 def ai_route_decision(message: str) -> dict:
-    if not HF_API_KEY:
-        return fallback_decision(message, reason="HF_API_KEY missing")
-
-    headers = {
-        "Authorization": f"Bearer {HF_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
     payload = {
-        "model": MODEL_NAME,
+        "model": OLLAMA_MODEL,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": message}
@@ -41,22 +31,25 @@ def ai_route_decision(message: str) -> dict:
 
     try:
         response = requests.post(
-            ROUTER_URL,
-            headers=headers,
+            f"{OLLAMA_BASE_URL}/v1/chat/completions",
             json=payload,
-            timeout=20
+            timeout=60
         )
 
         if response.status_code != 200:
             return fallback_decision(
                 message,
-                reason=f"HF error {response.status_code}"
+                reason=f"Ollama error {response.status_code}"
             )
 
         data = response.json()
-        content = data["choices"][0]["message"]["content"]
+        content = data["choices"][0]["message"]["content"].strip()
+        if content.startswith("```"):
+            content = content.strip("`")
+            if content.lower().startswith("json"):
+                content = content[4:]
+            content = content.strip()
 
-        # LLM MUST return JSON
         return json.loads(content)
 
     except Exception as e:
