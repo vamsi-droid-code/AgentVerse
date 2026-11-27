@@ -1,9 +1,14 @@
 import os
 from crewai import Agent, LLM
 
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:0.5b")
+
 llm = LLM(
-    model="huggingface/meta-llama/Llama-3.1-8B-Instruct",
-    api_key=os.getenv("HF_API_KEY"),
+    model=OLLAMA_MODEL,
+    base_url=f"{OLLAMA_BASE_URL}/v1",
+    api_key="ollama",
+    custom_openai=True,
     temperature=0.7
 )
 
